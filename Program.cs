@@ -7,6 +7,8 @@ namespace HacknetDecypher
 {
 	public class Program
 	{
+		private static ushort HeaderCode = 4065;
+
 		public static int Main(string[] argv)
 		{
 			if (argv.Length < 1)
@@ -30,20 +32,17 @@ namespace HacknetDecypher
 			var headers = lines[0].Split("::");
 
 			var contentCode = Check(headers[3], "ENCODED");
-			var headerCode = argv.Length < 2
-				? contentCode
-				: Check(headers[4], argv[1]);
 
-			var message = Decrypt(headers[1], headerCode);
-			var link = Decrypt(headers[2], headerCode);
+			var message = Decrypt(headers[1], HeaderCode);
+			var link = Decrypt(headers[2], HeaderCode);
 			var extension = headers.Length > 4
-				? Decrypt(headers[4], headerCode)
+				? Decrypt(headers[4], HeaderCode)
 				: String.Empty;
 
 			var content = Decrypt(lines[1], contentCode);
 
 			Console.WriteLine("Internal codes:");
-			Console.WriteLine("\tHeaders: " + headerCode);
+			Console.WriteLine("\tHeaders: " + HeaderCode);
 			Console.WriteLine("\tContent: " + contentCode);
 			Console.WriteLine();
 
@@ -59,6 +58,12 @@ namespace HacknetDecypher
 			return 0;
 		}
 
+		/// <summary>
+		/// Finds the internal code used for encryption of a piece of data.
+		/// </summary>
+		/// <param name="encrypted">The encrypted data.</param>
+		/// <param name="decrypted">The decrypted data.</param>
+		/// <returns>Internal encryption code.</returns>
 		private static ushort Check(string encrypted, string decrypted)
 		{
 			return Enumerable
@@ -68,6 +73,12 @@ namespace HacknetDecypher
 				.First();
 		}
 
+		/// <summary>
+		/// Decrypts data using the provided internal code.
+		/// </summary>
+		/// <param name="data">Data to decrypt.</param>
+		/// <param name="passcode">Internal code (derived from password).</param>
+		/// <returns>Decrypted data.</returns>
 		private static string Decrypt(string data, ushort passcode)
 		{
 			var ret = new StringBuilder();
@@ -89,9 +100,7 @@ namespace HacknetDecypher
 
 		private static void PrintUsage()
 		{
-			Console.WriteLine("Usage: hacknet-decypher <message|message-file-path> [<expected-file-ext>]");
-			Console.WriteLine("If the expected file extension is provided, the application tries to find a code that decrypts it correctly and uses that for the headers.");
-			Console.WriteLine("The file extension should include a '.' at the beginning.");
+			Console.WriteLine("Usage: hacknet-decypher <message|message-file-path>");
 		}
 	}
 }
